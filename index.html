@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finanças Pessoais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink:#0e0e0d;
+  --ink2:#3a3a38;
+  --ink3:#8a8a85;
+  --paper:#f5f2ec;
+  --paper2:#ede9e0;
+  --paper3:#e4dfd4;
+  --accent:#1a6b4a;
+  --accent2:#2d9e6e;
+  --accent-light:#d4ede3;
+  --red:#c0392b;
+  --red-light:#fbeae8;
+  --amber:#9a6200;
+  --amber-light:#fdf3dc;
+  --blue:#1a4fa0;
+  --blue-light:#e8eef8;
+  --border:rgba(14,14,13,0.1);
+  --r:12px;
+}
+
+html{font-size:16px;scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  line-height:1.6;
+}
+
+/* ── Layout ─────────────────────────────────── */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* ── Sidebar ─────────────────────────────────── */
+.sidebar{
+  background:var(--ink);
+  padding:2rem 1.5rem;
+  display:flex;
+  flex-direction:column;
+  gap:0.5rem;
+  position:sticky;
+  top:0;
+  height:100vh;
+  overflow-y:auto;
+}
+.logo{
+  font-family:'DM Serif Display',serif;
+  font-size:1.4rem;
+  color:#f5f2ec;
+  letter-spacing:-0.02em;
+  margin-bottom:0.25rem;
+  line-height:1.2;
+}
+.logo span{color:var(--accent2);font-style:italic}
+.month-label{
+  font-size:0.72rem;
+  font-weight:500;
+  color:var(--ink3);
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  margin-bottom:1.5rem;
+}
+.nav-section{
+  font-size:0.65rem;
+  font-weight:500;
+  color:rgba(255,255,255,0.25);
+  text-transform:uppercase;
+  letter-spacing:0.12em;
+  margin:1rem 0 0.4rem;
+  padding-left:0.75rem;
+}
+.nav-btn{
+  display:flex;
+  align-items:center;
+  gap:0.6rem;
+  padding:0.55rem 0.75rem;
+  border-radius:8px;
+  border:none;
+  background:transparent;
+  color:rgba(255,255,255,0.55);
+  font-family:'DM Sans',sans-serif;
+  font-size:0.875rem;
+  cursor:pointer;
+  width:100%;
+  text-align:left;
+  transition:all 0.15s;
+}
+.nav-btn:hover{background:rgba(255,255,255,0.07);color:#fff}
+.nav-btn.active{background:var(--accent);color:#fff}
+.nav-icon{width:16px;height:16px;opacity:0.8;flex-shrink:0}
+.sidebar-foot{
+  margin-top:auto;
+  padding-top:1.5rem;
+  border-top:1px solid rgba(255,255,255,0.08);
+}
+.month-select-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:0.4rem;
+}
+.month-select-wrap label{font-size:0.72rem;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em}
+#monthSelector{
+  background:rgba(255,255,255,0.07);
+  border:1px solid rgba(255,255,255,0.12);
+  color:#fff;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.875rem;
+  padding:0.5rem 0.75rem;
+  border-radius:8px;
+  width:100%;
+  cursor:pointer;
+}
+#monthSelector option{background:#1a1a18;color:#fff}
+
+/* ── Main ─────────────────────────────────── */
+.main{padding:2.5rem 2rem;overflow-x:hidden}
+
+/* ── Page header ─── */
+.page-header{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  margin-bottom:2rem;
+}
+.page-title{
+  font-family:'DM Serif Display',serif;
+  font-size:2rem;
+  letter-spacing:-0.03em;
+  color:var(--ink);
+  line-height:1.1;
+}
+.page-title span{color:var(--accent);font-style:italic}
+.page-subtitle{font-size:0.8rem;color:var(--ink3);font-weight:300}
+
+/* ── Section tabs ─── */
+.tabs{display:none}
+
+/* ── Panels ─── */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ── KPI cards ─── */
+.kpi-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1rem;
+  margin-bottom:1.75rem;
+}
+.kpi{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.25rem 1.5rem;
+  position:relative;
+  overflow:hidden;
+  transition:transform 0.15s;
+}
+.kpi::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+}
+.kpi.green::before{background:var(--accent2)}
+.kpi.red::before{background:var(--red)}
+.kpi.blue::before{background:var(--blue)}
+.kpi.amber::before{background:var(--amber)}
+.kpi-label{font-size:0.72rem;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.5rem}
+.kpi-value{font-family:'DM Serif Display',serif;font-size:1.75rem;letter-spacing:-0.03em;line-height:1}
+.kpi.green .kpi-value{color:var(--accent)}
+.kpi.red .kpi-value{color:var(--red)}
+.kpi.blue .kpi-value{color:var(--blue)}
+.kpi.amber .kpi-value{color:var(--amber)}
+.kpi-sub{font-size:0.75rem;color:var(--ink3);margin-top:0.4rem;font-weight:300}
+
+/* ── Grid dashboard ─── */
+.dash-grid{
+  display:grid;
+  grid-template-columns:1fr 380px;
+  gap:1.25rem;
+}
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.5rem;
+}
+.card-title{
+  font-size:0.72rem;
+  font-weight:500;
+  color:var(--ink3);
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  margin-bottom:1.25rem;
+}
+
+/* ── Category bars ─── */
+.cat-list{display:flex;flex-direction:column;gap:0.75rem}
+.cat-item{display:flex;flex-direction:column;gap:0.3rem}
+.cat-row{display:flex;align-items:center;justify-content:space-between}
+.cat-name{font-size:0.85rem;color:var(--ink2)}
+.cat-amount{font-size:0.85rem;font-weight:500;color:var(--ink)}
+.cat-bar-bg{height:4px;background:var(--paper3);border-radius:99px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:99px;transition:width 0.6s cubic-bezier(.4,0,.2,1)}
+
+/* ── Donut chart ─── */
+.donut-wrap{position:relative;width:180px;height:180px;margin:0 auto 1rem}
+.donut-center{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  text-align:center;
+  pointer-events:none;
+}
+.donut-center-val{
+  font-family:'DM Serif Display',serif;
+  font-size:1.4rem;
+  color:var(--ink);
+  line-height:1;
+}
+.donut-center-lbl{font-size:0.68rem;color:var(--ink3);text-transform:uppercase;letter-spacing:0.06em}
+.legend-list{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem}
+.legend-item{display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--ink2)}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.legend-pct{margin-left:auto;font-weight:500;color:var(--ink);font-size:0.78rem}
+
+/* ── Budget vs real ─── */
+.budget-row{
+  display:grid;
+  grid-template-columns:1fr auto auto auto;
+  align-items:center;
+  gap:0.75rem;
+  padding:0.6rem 0;
+  border-bottom:1px solid var(--paper2);
+  font-size:0.83rem;
+}
+.budget-row:last-child{border-bottom:none}
+.budget-cat{color:var(--ink2)}
+.budget-num{font-weight:500;color:var(--ink);text-align:right;min-width:70px}
+.budget-chip{
+  font-size:0.68rem;
+  font-weight:500;
+  padding:2px 7px;
+  border-radius:99px;
+  min-width:38px;
+  text-align:center;
+}
+.chip-ok{background:var(--accent-light);color:var(--accent)}
+.chip-over{background:var(--red-light);color:var(--red)}
+.chip-na{background:var(--paper2);color:var(--ink3)}
+
+/* ── Add transaction ─── */
+.add-section{margin-bottom:1.75rem}
+.form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 140px 140px auto;
+  gap:0.75rem;
+  align-items:end;
+}
+.field{display:flex;flex-direction:column;gap:0.35rem}
+.field label{font-size:0.72rem;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:0.08em}
+.field input,.field select{
+  padding:0.6rem 0.85rem;
+  border:1px solid var(--paper3);
+  border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.875rem;
+  color:var(--ink);
+  background:#fff;
+  transition:border-color 0.15s;
+  width:100%;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent2)}
+.btn-add{
+  padding:0.65rem 1.25rem;
+  background:var(--ink);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.875rem;
+  font-weight:500;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background 0.15s,transform 0.1s;
+  align-self:end;
+}
+.btn-add:hover{background:var(--accent)}
+.btn-add:active{transform:scale(0.97)}
+
+/* ── Transactions table ─── */
+.tx-table{width:100%;border-collapse:collapse}
+.tx-table th{
+  font-size:0.68rem;
+  font-weight:500;
+  color:var(--ink3);
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  text-align:left;
+  padding:0.5rem 0.75rem;
+  border-bottom:2px solid var(--paper3);
+}
+.tx-table td{
+  padding:0.7rem 0.75rem;
+  border-bottom:1px solid var(--paper2);
+  font-size:0.875rem;
+  vertical-align:middle;
+}
+.tx-table tr:last-child td{border-bottom:none}
+.tx-table tr:hover td{background:var(--paper)}
+.tx-date{color:var(--ink3);font-size:0.8rem;font-weight:300}
+.tx-desc{color:var(--ink);font-weight:400}
+.tx-cat{
+  display:inline-block;
+  font-size:0.72rem;
+  padding:2px 8px;
+  border-radius:99px;
+  background:var(--paper2);
+  color:var(--ink2);
+  font-weight:500;
+}
+.tx-val{font-weight:500;text-align:right}
+.tx-val.deb{color:var(--red)}
+.tx-val.cred{color:var(--accent)}
+.tx-del{
+  background:none;
+  border:none;
+  cursor:pointer;
+  color:var(--ink3);
+  font-size:1rem;
+  padding:0 0.25rem;
+  opacity:0;
+  transition:opacity 0.15s,color 0.15s;
+}
+.tx-table tr:hover .tx-del{opacity:1}
+.tx-del:hover{color:var(--red)}
+
+/* ── Fixed costs panel ─── */
+.fixed-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1rem;
+}
+.fixed-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.25rem 1.5rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+.fixed-info{flex:1}
+.fixed-name{font-weight:500;color:var(--ink);font-size:0.9rem}
+.fixed-cat-tag{font-size:0.72rem;color:var(--ink3);margin-top:2px}
+.fixed-val{
+  font-family:'DM Serif Display',serif;
+  font-size:1.1rem;
+  color:var(--amber);
+  white-space:nowrap;
+}
+.fixed-toggle{
+  width:36px;height:20px;
+  border-radius:99px;
+  border:none;
+  cursor:pointer;
+  position:relative;
+  transition:background 0.2s;
+  flex-shrink:0;
+}
+.fixed-toggle.on{background:var(--accent2)}
+.fixed-toggle.off{background:var(--paper3)}
+.fixed-toggle::after{
+  content:'';
+  position:absolute;
+  top:3px;width:14px;height:14px;
+  border-radius:50%;
+  background:#fff;
+  transition:left 0.2s;
+  box-shadow:0 1px 3px rgba(0,0,0,0.2);
+}
+.fixed-toggle.on::after{left:19px}
+.fixed-toggle.off::after{left:3px}
+
+/* ── Budget panel ─── */
+.budget-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:1rem;
+}
+.budget-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.25rem 1.5rem;
+}
+.budget-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem}
+.budget-card-cat{font-weight:500;font-size:0.9rem;color:var(--ink)}
+.budget-card-edit{
+  background:none;border:none;cursor:pointer;
+  font-size:0.8rem;color:var(--ink3);
+  font-family:'DM Sans',sans-serif;
+  padding:2px 6px;border-radius:4px;
+  transition:background 0.1s,color 0.1s;
+}
+.budget-card-edit:hover{background:var(--paper2);color:var(--ink)}
+.budget-prog-bg{height:6px;background:var(--paper3);border-radius:99px;margin-bottom:0.6rem;overflow:hidden}
+.budget-prog-fill{height:100%;border-radius:99px;transition:width 0.6s}
+.budget-nums{display:flex;justify-content:space-between;font-size:0.78rem}
+.budget-spent{color:var(--ink2);font-weight:500}
+.budget-limit{color:var(--ink3)}
+.budget-input-wrap{display:flex;align-items:center;gap:0.5rem;margin-top:0.75rem}
+.budget-input-wrap input{
+  flex:1;padding:0.45rem 0.65rem;
+  border:1px solid var(--paper3);
+  border-radius:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.85rem;
+  color:var(--ink);
+}
+.budget-input-wrap input:focus{outline:none;border-color:var(--accent2)}
+.btn-save{
+  padding:0.45rem 0.75rem;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  font-family:'DM Sans',sans-serif;
+  font-size:0.8rem;
+  font-weight:500;
+  cursor:pointer;
+}
+
+/* ── Goals ─── */
+.goals-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:1rem;
+}
+.goal-card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.5rem;
+}
+.goal-emoji{font-size:1.5rem;margin-bottom:0.5rem}
+.goal-name{font-weight:500;font-size:1rem;color:var(--ink);margin-bottom:0.25rem}
+.goal-target{font-size:0.8rem;color:var(--ink3);margin-bottom:1rem}
+.goal-bar-bg{height:8px;background:var(--paper3);border-radius:99px;overflow:hidden;margin-bottom:0.5rem}
+.goal-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent2),#4ecb94)}
+.goal-nums{display:flex;justify-content:space-between;font-size:0.8rem}
+.goal-saved{font-weight:500;color:var(--ink)}
+.goal-pct{color:var(--ink3)}
+
+/* ── Empty state ─── */
+.empty{
+  text-align:center;
+  padding:3rem;
+  color:var(--ink3);
+}
+.empty-icon{font-size:2.5rem;margin-bottom:0.75rem}
+.empty-text{font-size:0.9rem}
+
+/* ── Toast ─── */
+.toast{
+  position:fixed;
+  bottom:2rem;
+  right:2rem;
+  background:var(--ink);
+  color:#fff;
+  padding:0.75rem 1.25rem;
+  border-radius:8px;
+  font-size:0.875rem;
+  opacity:0;
+  transform:translateY(8px);
+  transition:all 0.2s;
+  pointer-events:none;
+  z-index:999;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* ── Scrollbar ─── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--paper3);border-radius:99px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <div class="logo">meu<span>dinheiro</span></div>
+  <div class="month-label" id="sidebarMonth">Maio 2026</div>
+
+  <div class="nav-section">visão</div>
+  <button class="nav-btn active" onclick="showPanel('dashboard',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
+    Dashboard
+  </button>
+
+  <div class="nav-section">lançamentos</div>
+  <button class="nav-btn" onclick="showPanel('lancamentos',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v1H2V3zm0 3h12v7a1 1 0 01-1 1H3a1 1 0 01-1-1V6zm3 2v1h6V8H5zm0 3v1h4v-1H5z"/></svg>
+    Todas as transações
+  </button>
+  <button class="nav-btn" onclick="showPanel('fixos',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="2.5"/><path fill-rule="evenodd" d="M8 1a7 7 0 100 14A7 7 0 008 1zM2 8a6 6 0 1112 0A6 6 0 012 8z"/></svg>
+    Gastos fixos
+  </button>
+
+  <div class="nav-section">planejamento</div>
+  <button class="nav-btn" onclick="showPanel('orcamento',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 2.5A1.5 1.5 0 012.5 1h11A1.5 1.5 0 0115 2.5v5a1.5 1.5 0 01-1.5 1.5H2.5A1.5 1.5 0 011 7.5v-5zm1.5 0v5h11v-5h-11zM3 10h10v1H3v-1zm0 2h7v1H3v-1z"/></svg>
+    Orçamento
+  </button>
+  <button class="nav-btn" onclick="showPanel('metas',this)">
+    <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z"/></svg>
+    Metas
+  </button>
+
+  <div class="sidebar-foot">
+    <div class="month-select-wrap">
+      <label>mês de referência</label>
+      <select id="monthSelector" onchange="changeMonth(this.value)">
+        <option value="Maio 2026" selected>Maio 2026</option>
+        <option value="Junho 2026">Junho 2026</option>
+        <option value="Julho 2026">Julho 2026</option>
+      </select>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <div class="panel active" id="panel-dashboard">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Maio <span>2026</span></h1>
+        <p class="page-subtitle">Resumo financeiro do mês</p>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi green">
+        <div class="kpi-label">Entradas</div>
+        <div class="kpi-value" id="kpi-entrada">R$ 0</div>
+        <div class="kpi-sub">salário + extras</div>
+      </div>
+      <div class="kpi red">
+        <div class="kpi-label">Total gasto</div>
+        <div class="kpi-value" id="kpi-gasto">R$ 0</div>
+        <div class="kpi-sub" id="kpi-gasto-pct">— da renda</div>
+      </div>
+      <div class="kpi blue">
+        <div class="kpi-label">Saldo</div>
+        <div class="kpi-value" id="kpi-saldo">R$ 0</div>
+        <div class="kpi-sub" id="kpi-saldo-pct">— guardado</div>
+      </div>
+      <div class="kpi amber">
+        <div class="kpi-label">Fixos</div>
+        <div class="kpi-value" id="kpi-fixos">R$ 0</div>
+        <div class="kpi-sub">comprometido</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <!-- Gastos por categoria -->
+      <div class="card">
+        <div class="card-title">Gastos por categoria</div>
+        <div class="cat-list" id="catList"></div>
+      </div>
+
+      <!-- Donut -->
+      <div class="card" style="display:flex;flex-direction:column;align-items:center">
+        <div class="card-title" style="width:100%">Distribuição</div>
+        <div class="donut-wrap">
+          <canvas id="donutChart" width="180" height="180" role="img" aria-label="Gráfico de distribuição dos gastos"></canvas>
+          <div class="donut-center">
+            <div class="donut-center-val" id="donut-center-val">—</div>
+            <div class="donut-center-lbl">total gasto</div>
+          </div>
+        </div>
+        <div class="legend-list" id="donutLegend" style="width:100%;max-width:240px"></div>
+      </div>
+
+      <!-- Budget vs real -->
+      <div class="card" style="grid-column:1/-1">
+        <div class="card-title">Orçamento vs real</div>
+        <div id="budgetVsReal"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LANÇAMENTOS ── -->
+  <div class="panel" id="panel-lancamentos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Trans<span>ações</span></h1>
+        <p class="page-subtitle">Registre todos os seus gastos e recebimentos</p>
+      </div>
+    </div>
+
+    <!-- Entradas rápidas -->
+    <div class="card add-section">
+      <div class="card-title">Registrar entrada de dinheiro</div>
+      <div class="form-grid" style="grid-template-columns:1fr 160px auto">
+        <div class="field">
+          <label>Descrição</label>
+          <input type="text" id="inc-desc" placeholder="Salário, freela...">
+        </div>
+        <div class="field">
+          <label>Valor (R$)</label>
+          <input type="number" id="inc-val" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <button class="btn-add" onclick="addIncome()" style="background:var(--accent)">+ Entrada</button>
+      </div>
+    </div>
+
+    <div class="card add-section">
+      <div class="card-title">Registrar gasto</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="tx-date">
+        </div>
+        <div class="field">
+          <label>Descrição</label>
+          <input type="text" id="tx-desc" placeholder="Padaria, uber...">
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select id="tx-cat">
+            <option value="">Categoria</option>
+            <option>Mercado</option><option>Necessidades</option>
+            <option>Eletrônicos</option><option>Assinaturas</option>
+            <option>Roupa</option><option>Beleza</option>
+            <option>Presentes</option><option>Saúde</option>
+            <option>Despesas eventuais</option><option>Desenvolvimento</option>
+            <option>Uber/transporte</option><option>IFood/restaurante</option>
+            <option>Lazer</option><option>Aluguel</option><option>Contas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Valor (R$)</label>
+          <input type="number" id="tx-val" placeholder="0,00" step="0.01" min="0">
+        </div>
+        <div class="field">
+          <label>Tipo</label>
+          <select id="tx-tipo">
+            <option>Débito</option><option>Crédito</option>
+            <option>Pix</option><option>Dinheiro</option>
+          </select>
+        </div>
+        <button class="btn-add" onclick="addTx()">+ Lançar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="display:flex;justify-content:space-between">
+        <span>Extrato do mês</span>
+        <span id="tx-count" style="font-weight:500;color:var(--ink)"></span>
+      </div>
+      <table class="tx-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th style="text-align:right">Valor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="txBody"></tbody>
+      </table>
+      <div class="empty" id="txEmpty">
+        <div class="empty-icon">📋</div>
+        <div class="empty-text">Nenhum lançamento ainda.<br>Registre seu primeiro gasto acima.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FIXOS ── -->
+  <div class="panel" id="panel-fixos">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Gastos <span>Fixos</span></h1>
+        <p class="page-subtitle">Contas que se repetem todo mês</p>
+      </div>
+    </div>
+
+    <div class="card add-section">
+      <div class="card-title">Adicionar fixo</div>
+      <div class="form-grid">
+        <div class="field" style="grid-column:span 1">
+          <label>Nome</label>
+          <input type="text" id="fix-name" placeholder="Aluguel, Netflix...">
+        </div>
+        <div class="field">
+          <label>Categoria</label>
+          <select id="fix-cat">
+            <option value="">Categoria</option>
+            <option>Mercado</option><option>Necessidades</option>
+            <option>Eletrônicos</option><option>Assinaturas</option>
+            <option>Roupa</option><option>Beleza</option>
+            <option>Saúde</option><option>Despesas eventuais</option>
+            <option>Uber/transporte</option><option>Lazer</option>
+            <option>Aluguel</option><option>Contas</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Valor (R$)</label>
+          <input type="number" id="fix-val" placeholder="0,00" step="0.01">
+        </div>
+        <div class="field">
+          <label>Tipo</label>
+          <select id="fix-tipo">
+            <option>Débito</option><option>Crédito</option><option>Pix</option>
+          </select>
+        </div>
+        <button class="btn-add" onclick="addFixed()">+ Adicionar</button>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <span style="font-size:0.8rem;color:var(--ink3)">Total fixos: <strong id="fixos-total" style="color:var(--amber);font-family:'DM Serif Display',serif;font-size:1.1rem">R$ 0</strong></span>
+      <span style="font-size:0.75rem;color:var(--ink3)">Ative/desative para incluir ou excluir do total</span>
+    </div>
+
+    <div class="fixed-grid" id="fixedGrid"></div>
+    <div class="empty" id="fixedEmpty">
+      <div class="empty-icon">🔄</div>
+      <div class="empty-text">Nenhum fixo cadastrado ainda.</div>
+    </div>
+  </div>
+
+  <!-- ── ORÇAMENTO ── -->
+  <div class="panel" id="panel-orcamento">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Orça<span>mento</span></h1>
+        <p class="page-subtitle">Defina limites por categoria e acompanhe em tempo real</p>
+      </div>
+    </div>
+    <div class="budget-grid" id="budgetGrid"></div>
+  </div>
+
+  <!-- ── METAS ── -->
+  <div class="panel" id="panel-metas">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Suas <span>Metas</span></h1>
+        <p class="page-subtitle">Acompanhe seus objetivos financeiros</p>
+      </div>
+    </div>
+
+    <div class="card add-section">
+      <div class="card-title">Nova meta</div>
+      <div class="form-grid" style="grid-template-columns:60px 1fr 150px 150px auto">
+        <div class="field">
+          <label>Emoji</label>
+          <input type="text" id="g-emoji" placeholder="✈️" maxlength="2">
+        </div>
+        <div class="field">
+          <label>Objetivo</label>
+          <input type="text" id="g-name" placeholder="Viagem, MacBook...">
+        </div>
+        <div class="field">
+          <label>Meta (R$)</label>
+          <input type="number" id="g-target" placeholder="0" min="1">
+        </div>
+        <div class="field">
+          <label>Guardado (R$)</label>
+          <input type="number" id="g-saved" placeholder="0" min="0">
+        </div>
+        <button class="btn-add" onclick="addGoal()">+ Criar</button>
+      </div>
+    </div>
+
+    <div class="goals-grid" id="goalsGrid"></div>
+    <div class="empty" id="goalsEmpty">
+      <div class="empty-icon">🎯</div>
+      <div class="empty-text">Nenhuma meta criada ainda.<br>Adicione seu primeiro objetivo acima.</div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let state = {
+  income: 0,
+  transactions: [],
+  fixed: [
+    {id:1,name:'Condomínio',cat:'Contas',val:160.23,tipo:'Débito',on:true},
+    {id:2,name:'Internet',cat:'Contas',val:164.43,tipo:'Débito',on:true},
+    {id:3,name:'Psicólogo',cat:'Saúde',val:250,tipo:'Débito',on:true},
+    {id:4,name:'Assessoria',cat:'Saúde',val:100,tipo:'Débito',on:true},
+    {id:5,name:'Aluguel/Mãe',cat:'Aluguel',val:300,tipo:'Débito',on:true},
+    {id:6,name:'Centro Espírita Axé',cat:'Assinaturas',val:60,tipo:'Débito',on:true},
+    {id:7,name:'Estacionamento',cat:'Assinaturas',val:135,tipo:'Débito',on:true},
+    {id:8,name:'Storage iPhone',cat:'Assinaturas',val:19.9,tipo:'Crédito',on:true},
+    {id:9,name:'Spotify',cat:'Assinaturas',val:24.52,tipo:'Crédito',on:true},
+  ],
+  budgets: {
+    'Mercado':400,'Necessidades':100,'Eletrônicos':50,'Assinaturas':250,
+    'Roupa':150,'Beleza':100,'Presentes':100,'Saúde':400,
+    'Despesas eventuais':400,'Desenvolvimento':100,'Uber/transporte':200,
+    'IFood/restaurante':150,'Lazer':200,'Aluguel':300,'Contas':1200
+  },
+  goals: [
+    {id:1,emoji:'✈️',name:'Viagem',target:5000,saved:0},
+    {id:2,emoji:'💉',name:'Depilação a laser',target:3000,saved:0},
+  ],
+  nextId: 100,
+};
+
+const CAT_COLORS = {
+  'Contas':'#c0392b','Despesas eventuais':'#9a6200','Mercado':'#185FA5',
+  'Assinaturas':'#533AB7','Saúde':'#1a6b4a','Roupa':'#7B3F9E',
+  'Aluguel':'#c0392b','Uber/transporte':'#1D9E75','Lazer':'#D4537E',
+  'Beleza':'#E67E22','IFood/restaurante':'#27AE60','Presentes':'#8E44AD',
+  'Necessidades':'#2C3E50','Eletrônicos':'#2980B9','Desenvolvimento':'#16A085',
+};
+
+const fmt = v => 'R$ ' + Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const today = () => new Date().toISOString().split('T')[0];
+
+// ── Toast ──
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── Navigation ──
+function showPanel(id, btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  renderAll();
+}
+
+// ── Computed ──
+function getTotalFixed(){
+  return state.fixed.filter(f=>f.on).reduce((s,f)=>s+f.val,0);
+}
+function getSpentByCategory(){
+  const map = {};
+  state.transactions.filter(t=>!t.isIncome).forEach(t=>{
+    map[t.cat] = (map[t.cat]||0) + t.val;
+  });
+  // also add active fixed
+  state.fixed.filter(f=>f.on).forEach(f=>{
+    map[f.cat] = (map[f.cat]||0) + f.val;
+  });
+  return map;
+}
+function getTotalSpent(){
+  return Object.values(getSpentByCategory()).reduce((s,v)=>s+v,0);
+}
+
+// ── Render all ──
+function renderAll(){
+  renderDashboard();
+  renderTxList();
+  renderFixed();
+  renderBudget();
+  renderGoals();
+}
+
+// ── DASHBOARD ──
+let donutChart = null;
+function renderDashboard(){
+  const totalFixed = getTotalFixed();
+  const spent = getSpentByCategory();
+  const totalSpent = getTotalSpent();
+  const saldo = state.income - totalSpent;
+  const pctGasto = state.income > 0 ? (totalSpent/state.income*100).toFixed(1) : '—';
+  const pctSaldo = state.income > 0 ? (saldo/state.income*100).toFixed(1) : '—';
+
+  document.getElementById('kpi-entrada').textContent = fmt(state.income);
+  document.getElementById('kpi-gasto').textContent = fmt(totalSpent);
+  document.getElementById('kpi-gasto-pct').textContent = pctGasto !== '—' ? pctGasto + '% da renda' : '— da renda';
+  document.getElementById('kpi-saldo').textContent = fmt(saldo);
+  document.getElementById('kpi-saldo-pct').textContent = pctSaldo !== '—' ? pctSaldo + '% guardado' : '— guardado';
+  document.getElementById('kpi-fixos').textContent = fmt(totalFixed);
+
+  // Category bars
+  const catList = document.getElementById('catList');
+  const entries = Object.entries(spent).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const maxVal = entries.length ? entries[0][1] : 1;
+  catList.innerHTML = entries.length ? entries.map(([cat,val])=>`
+    <div class="cat-item">
+      <div class="cat-row">
+        <span class="cat-name">${cat}</span>
+        <span class="cat-amount">${fmt(val)}</span>
+      </div>
+      <div class="cat-bar-bg">
+        <div class="cat-bar-fill" style="width:${(val/maxVal*100).toFixed(1)}%;background:${CAT_COLORS[cat]||'#888'}"></div>
+      </div>
+    </div>`).join('') : '<p style="color:var(--ink3);font-size:0.85rem;text-align:center;padding:2rem 0">Nenhum gasto lançado ainda.</p>';
+
+  // Donut
+  document.getElementById('donut-center-val').textContent = fmt(totalSpent);
+  const donutData = entries.slice(0,6);
+  if(donutChart) donutChart.destroy();
+  if(donutData.length){
+    const ctx = document.getElementById('donutChart').getContext('2d');
+    donutChart = new Chart(ctx,{
+      type:'doughnut',
+      data:{
+        labels: donutData.map(([c])=>c),
+        datasets:[{
+          data: donutData.map(([,v])=>v),
+          backgroundColor: donutData.map(([c])=>CAT_COLORS[c]||'#888'),
+          borderWidth:0,
+          hoverOffset:4,
+        }]
+      },
+      options:{
+        responsive:false,
+        cutout:'68%',
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmt(ctx.raw)}}}
+      }
+    });
+  }
+
+  const legend = document.getElementById('donutLegend');
+  legend.innerHTML = donutData.map(([cat,val])=>`
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${CAT_COLORS[cat]||'#888'}"></span>
+      <span>${cat}</span>
+      <span class="legend-pct">${totalSpent>0?(val/totalSpent*100).toFixed(0)+'%':'0%'}</span>
+    </div>`).join('');
+
+  // Budget vs real
+  const bvr = document.getElementById('budgetVsReal');
+  const cats = Object.keys(state.budgets);
+  bvr.innerHTML = cats.map(cat=>{
+    const lim = state.budgets[cat]||0;
+    const gas = spent[cat]||0;
+    const over = lim > 0 && gas > lim;
+    const chipClass = lim===0 ? 'chip-na' : (over ? 'chip-over' : 'chip-ok');
+    const chipTxt = lim===0 ? '—' : (over ? 'excedeu' : 'ok');
+    return `
+    <div class="budget-row">
+      <span class="budget-cat">${cat}</span>
+      <span class="budget-num" style="color:var(--ink3);font-weight:400">${lim>0?fmt(lim):'sem limite'}</span>
+      <span class="budget-num">${gas>0?fmt(gas):'—'}</span>
+      <span class="budget-chip ${chipClass}">${chipTxt}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── TRANSACTIONS ──
+function addIncome(){
+  const desc = document.getElementById('inc-desc').value.trim();
+  const val = parseFloat(document.getElementById('inc-val').value);
+  if(!val||val<=0){toast('Informe um valor válido.');return;}
+  state.income += val;
+  state.transactions.unshift({
+    id:state.nextId++,date:today(),desc:desc||'Entrada',cat:'—',val,tipo:'—',isIncome:true
+  });
+  document.getElementById('inc-desc').value='';
+  document.getElementById('inc-val').value='';
+  toast('Entrada registrada!');
+  renderAll();
+}
+
+function addTx(){
+  const date = document.getElementById('tx-date').value || today();
+  const desc = document.getElementById('tx-desc').value.trim();
+  const cat  = document.getElementById('tx-cat').value;
+  const val  = parseFloat(document.getElementById('tx-val').value);
+  const tipo = document.getElementById('tx-tipo').value;
+  if(!desc){toast('Informe a descrição.');return;}
+  if(!cat){toast('Selecione uma categoria.');return;}
+  if(!val||val<=0){toast('Informe um valor válido.');return;}
+  state.transactions.unshift({id:state.nextId++,date,desc,cat,val,tipo,isIncome:false});
+  document.getElementById('tx-desc').value='';
+  document.getElementById('tx-val').value='';
+  toast('Gasto lançado!');
+  renderAll();
+}
+
+function deleteTx(id){
+  state.transactions = state.transactions.filter(t=>t.id!==id);
+  renderAll();
+}
+
+function renderTxList(){
+  const tbody = document.getElementById('txBody');
+  const empty = document.getElementById('txEmpty');
+  const count = document.getElementById('tx-count');
+  const txs = state.transactions;
+  count.textContent = txs.length + ' registro' + (txs.length!==1?'s':'');
+  empty.style.display = txs.length?'none':'block';
+  tbody.innerHTML = txs.map(t=>`
+    <tr>
+      <td class="tx-date">${t.date.split('-').reverse().join('/')}</td>
+      <td class="tx-desc">${t.desc}</td>
+      <td><span class="tx-cat">${t.cat}</span></td>
+      <td style="color:var(--ink3);font-size:0.8rem">${t.tipo}</td>
+      <td class="tx-val ${t.isIncome?'cred':'deb'}">${t.isIncome?'+':'-'}${fmt(t.val)}</td>
+      <td><button class="tx-del" onclick="deleteTx(${t.id})" title="Remover">✕</button></td>
+    </tr>`).join('');
+}
+
+// ── FIXED ──
+function addFixed(){
+  const name = document.getElementById('fix-name').value.trim();
+  const cat  = document.getElementById('fix-cat').value;
+  const val  = parseFloat(document.getElementById('fix-val').value);
+  const tipo = document.getElementById('fix-tipo').value;
+  if(!name||!cat||!val){toast('Preencha todos os campos.');return;}
+  state.fixed.push({id:state.nextId++,name,cat,val,tipo,on:true});
+  document.getElementById('fix-name').value='';
+  document.getElementById('fix-val').value='';
+  toast('Fixo adicionado!');
+  renderAll();
+}
+
+function toggleFixed(id){
+  const f = state.fixed.find(x=>x.id===id);
+  if(f) f.on=!f.on;
+  renderAll();
+}
+
+function renderFixed(){
+  const grid = document.getElementById('fixedGrid');
+  const empty = document.getElementById('fixedEmpty');
+  const total = getTotalFixed();
+  document.getElementById('fixos-total').textContent = fmt(total);
+  empty.style.display = state.fixed.length?'none':'block';
+  grid.innerHTML = state.fixed.map(f=>`
+    <div class="fixed-card">
+      <div class="fixed-info">
+        <div class="fixed-name">${f.name}</div>
+        <div class="fixed-cat-tag">${f.cat} · ${f.tipo}</div>
+      </div>
+      <div class="fixed-val">${fmt(f.val)}</div>
+      <button class="fixed-toggle ${f.on?'on':'off'}" onclick="toggleFixed(${f.id})" title="${f.on?'Desativar':'Ativar'}"></button>
+    </div>`).join('');
+}
+
+// ── BUDGET ──
+function renderBudget(){
+  const spent = getSpentByCategory();
+  const grid = document.getElementById('budgetGrid');
+  grid.innerHTML = Object.entries(state.budgets).map(([cat,lim])=>{
+    const gas = spent[cat]||0;
+    const pct = lim>0 ? Math.min(gas/lim,1) : 0;
+    const over = lim>0 && gas>lim;
+    const barColor = over ? 'var(--red)' : pct > 0.8 ? 'var(--amber)' : 'var(--accent2)';
+    return `
+    <div class="budget-card">
+      <div class="budget-card-header">
+        <span class="budget-card-cat">${cat}</span>
+        <button class="budget-card-edit" onclick="editBudget('${cat}',this)">editar</button>
+      </div>
+      <div class="budget-prog-bg">
+        <div class="budget-prog-fill" style="width:${(pct*100).toFixed(1)}%;background:${barColor}"></div>
+      </div>
+      <div class="budget-nums">
+        <span class="budget-spent" style="color:${over?'var(--red)':'var(--ink2)'}">${fmt(gas)} gastos</span>
+        <span class="budget-limit">limite: ${lim>0?fmt(lim):'—'}</span>
+      </div>
+      <div class="budget-input-wrap" id="edit-wrap-${cat.replace(/\//g,'-')}" style="display:none">
+        <input type="number" placeholder="novo limite" id="edit-input-${cat.replace(/\//g,'-')}" min="0" step="10">
+        <button class="btn-save" onclick="saveBudget('${cat}')">salvar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editBudget(cat,btn){
+  const key = cat.replace(/\//g,'-');
+  const wrap = document.getElementById('edit-wrap-'+key);
+  const showing = wrap.style.display!=='none';
+  wrap.style.display = showing?'none':'flex';
+  btn.textContent = showing?'editar':'cancelar';
+}
+function saveBudget(cat){
+  const key = cat.replace(/\//g,'-');
+  const val = parseFloat(document.getElementById('edit-input-'+key).value);
+  if(!isNaN(val) && val>=0){
+    state.budgets[cat]=val;
+    toast('Orçamento atualizado!');
+    renderAll();
+  }
+}
+
+// ── GOALS ──
+function addGoal(){
+  const emoji  = document.getElementById('g-emoji').value.trim()||'🎯';
+  const name   = document.getElementById('g-name').value.trim();
+  const target = parseFloat(document.getElementById('g-target').value);
+  const saved  = parseFloat(document.getElementById('g-saved').value)||0;
+  if(!name||!target){toast('Preencha nome e meta.');return;}
+  state.goals.push({id:state.nextId++,emoji,name,target,saved});
+  document.getElementById('g-emoji').value='';
+  document.getElementById('g-name').value='';
+  document.getElementById('g-target').value='';
+  document.getElementById('g-saved').value='';
+  toast('Meta criada!');
+  renderGoals();
+}
+
+function renderGoals(){
+  const grid = document.getElementById('goalsGrid');
+  const empty = document.getElementById('goalsEmpty');
+  empty.style.display = state.goals.length?'none':'block';
+  grid.innerHTML = state.goals.map(g=>{
+    const pct = Math.min(g.saved/g.target,1);
+    return `
+    <div class="goal-card">
+      <div class="goal-emoji">${g.emoji}</div>
+      <div class="goal-name">${g.name}</div>
+      <div class="goal-target">meta: ${fmt(g.target)}</div>
+      <div class="goal-bar-bg">
+        <div class="goal-bar-fill" style="width:${(pct*100).toFixed(1)}%"></div>
+      </div>
+      <div class="goal-nums">
+        <span class="goal-saved">${fmt(g.saved)}</span>
+        <span class="goal-pct">${(pct*100).toFixed(0)}%</span>
+      </div>
+      <div style="margin-top:0.75rem;display:flex;gap:0.5rem">
+        <input type="number" placeholder="adicionar valor" id="g-add-${g.id}" 
+          style="flex:1;padding:0.4rem 0.6rem;border:1px solid var(--paper3);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:0.82rem" min="0">
+        <button class="btn-save" onclick="addToGoal(${g.id})">+</button>
+        <button class="btn-save" onclick="deleteGoal(${g.id})" style="background:var(--red)">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addToGoal(id){
+  const val = parseFloat(document.getElementById('g-add-'+id).value);
+  const g = state.goals.find(x=>x.id===id);
+  if(g && val>0){
+    g.saved = Math.min(g.saved+val,g.target);
+    toast('Meta atualizada!');
+    renderGoals();
+  }
+}
+function deleteGoal(id){
+  state.goals = state.goals.filter(x=>x.id!==id);
+  renderGoals();
+}
+
+// ── Month ──
+function changeMonth(val){
+  document.getElementById('sidebarMonth').textContent = val;
+  document.querySelectorAll('.page-title').forEach(el=>{
+    const parts = val.split(' ');
+    el.innerHTML = parts[0]+' <span>'+parts[1]+'</span>';
+  });
+}
+
+// ── Init ──
+document.getElementById('tx-date').value = today();
+renderAll();
+</script>
+</body>
+</html>
